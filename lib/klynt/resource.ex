@@ -1,8 +1,8 @@
 defmodule KL.Resource do
   import Logger
   alias KL.HttpClient
-  alias KL.ResponseHandler
-  alias KL.Model
+  alias KL.Handler
+  alias KL.Response
 
   defmacro __using__(_) do
     quote do
@@ -53,8 +53,8 @@ defmodule KL.Resource do
           action = String.to_atom(unquote(resource))
           model = unquote(model)
           HttpClient.get(unquote(meta[:url]) <> segment, params, headers)
-          |> Model.transform(model)
-          |> ResponseHandler.handle(action, handler)
+          |> Response.transform(model)
+          |> Handler.handle(action, handler)
         end
       end
     else
@@ -65,8 +65,8 @@ defmodule KL.Resource do
           action = String.to_atom(unquote(resource))
           model = unquote(model)
           HttpClient.get(unquote(meta[:url]), params, headers)
-          |> Model.transform(model)
-          |> ResponseHandler.handle(action, handler)
+          |> Response.transform(model)
+          |> Handler.handle(action, handler)
         end
       end
     end

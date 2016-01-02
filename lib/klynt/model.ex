@@ -16,15 +16,4 @@ defmodule KL.Model do
                 error: nil,
                  meta: nil
   end
-
-  def transform(%KL.Model.Response{content: content, error: nil, meta: meta}, model) do
-    case Code.eval_quoted(model) do
-      {nil, _}   -> content
-      {model, _} -> struct(model, content.data)
-    end
-  end
-
-  def transform(%KL.Model.Response{content: nil, error: error}, _model) do
-    error
-  end
 end
