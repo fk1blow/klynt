@@ -2,7 +2,6 @@ defmodule KL.Resource do
   import Logger
   alias KL.HttpClient
   alias KL.Handler
-  # alias KL.Response
 
   defmacro __using__(_) do
     quote do
