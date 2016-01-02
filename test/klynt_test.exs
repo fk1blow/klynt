@@ -5,7 +5,7 @@ defmodule KLTest do
   defmodule SimpleResource do
     use KL.Resource
 
-    @headers %{"Authorization" => "Bearer "}
+    headers Application.get_env(:klynt, :authorize_resource)
 
     get "simple_action", url: "https://api.dropboxapi.com/1/account/info"
 

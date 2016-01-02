@@ -1,12 +1,10 @@
 defmodule KL.Resource do
-  import Logger
   alias KL.HttpClient
   alias KL.Handler
 
   defmacro __using__(_) do
     quote do
       import KL.Resource
-      @headers %{}
     end
   end
 
@@ -14,8 +12,8 @@ defmodule KL.Resource do
   The `headers` macros is used to define the default headers included
   in all the "methods" defined by the api - each call will include
   these headers.
-  If valid, it redefines the `@headers`, which already
-  has a default value, of `%{}`
+  It generates a private function named `headers` that will be called
+  with each request/action
   """
   defmacro headers(do: headers), do: compile :headers, headers
   defmacro headers(headers), do: compile :headers, headers
@@ -40,17 +38,17 @@ defmodule KL.Resource do
       raise "cannot define a resource without an url"
     end
 
-    {handler, _} = Code.eval_quoted(meta[:handler])
-    headers = meta[:headers] || %{}
-    model = meta[:model]
+    {resource_handler, _} = Code.eval_quoted(meta[:handler])
+    resource_headers = meta[:headers] || %{}
+    resource_model = meta[:model]
 
     if meta[:segment] do
       quote do
         def unquote(:"#{resource}")(segment, params \\ %{}) do
-          headers = Map.merge(unquote(Macro.escape headers), @headers)
-          handler = unquote(handler)
+          headers = Map.merge(unquote(Macro.escape resource_headers), headers)
+          handler = unquote(resource_handler)
           action = String.to_atom(unquote(resource))
-          model = unquote(model)
+          model = unquote(resource_model)
           HttpClient.get(unquote(meta[:url]) <> segment, params, headers)
           |> Handler.Model.transform(model)
           |> Handler.Action.delegate(action, handler)
@@ -59,10 +57,10 @@ defmodule KL.Resource do
     else
       quote do
         def unquote(:"#{resource}")(params \\ %{}) do
-          headers = Map.merge(unquote(Macro.escape headers), @headers)
-          handler = unquote(handler)
+          headers = Map.merge(unquote(Macro.escape resource_headers), headers)
+          handler = unquote(resource_handler)
           action = String.to_atom(unquote(resource))
-          model = unquote(model)
+          model = unquote(resource_model)
           HttpClient.get(unquote(meta[:url]), params, headers)
           |> Handler.Model.transform(model)
           |> Handler.Action.delegate(action, handler)
@@ -82,8 +80,8 @@ defmodule KL.Resource do
 
   @doc false
   defp compile(:headers, headers) do
-    {headers, _} = Code.eval_quoted(headers)
-    unless is_map(headers), do: Logger.warn "the headers must be map type"
-    quote do: @headers unquote(Macro.escape headers) || %{}
+    quote do
+      defp headers, do: unquote(headers)
+    end
   end
 end
