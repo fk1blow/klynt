@@ -45,3 +45,15 @@ with an url segment:
 
 will define a `account_info/2`, which takes a string and a map. The final
 url of the resource will become `api.dropbox.com/1/account/info/<segment>`
+
+## installation
+
+Add klynt to your list of dependencies in mix.exs:
+
+    def deps do
+      {:klynt, git: "https://github.com/fk1blow/klynt.git"}
+    end
+
+update dependencies:
+
+    mix deps.get
