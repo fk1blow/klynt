@@ -1,7 +1,7 @@
 defmodule KL.Handler do
   defmodule Action do
-    def delegate(data, action, nil), do: data
-    def delegate(data, action, handler), do: apply(handler, :handle, [action, data])
+    def delegate(data, action, {nil, _}), do: data
+    def delegate(data, action, {handler, _}), do: apply(handler, :handle, [action, data])
   end
 
   defmodule Model do

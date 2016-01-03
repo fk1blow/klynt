@@ -1,34 +1,44 @@
 defmodule KL.Resource do
   alias KL.HttpClient
-  alias KL.Handler
+  alias KL.Handler.Action
+  alias KL.Handler.Model
 
   defmacro __using__(_) do
     quote do
-      import KL.Resource
+      import unquote(__MODULE__)
+
+      # returns the `headers/0` expression, if defined, or an empty map
+      defp _headers do
+        if :erlang.function_exported(__MODULE__, :headers, 0) do
+          case apply(__MODULE__, :headers, []) do
+            headers when is_map headers -> headers
+            _                           -> %{}
+          end
+        else
+          %{}
+        end
+      end
     end
   end
 
   @doc """
-  The `headers` macros is used to define the default headers included
-  in all the "methods" defined by the api - each call will include
-  these headers.
-  It generates a private function named `headers` that will be called
-  with each request/action
+   Defines a `headers/0` function, which returned value
+   shall be used by all requests made from/for a resource.
   """
   defmacro headers(do: headers), do: compile :headers, headers
   defmacro headers(headers), do: compile :headers, headers
 
   @doc """
-    GET method definition
-    It creates the action function, named `resource_name/2` that will
-    eventually call HTTPoison.get function
+    It creates `resource_name/2` function, that will provide a structured
+    representation of a resource and will make  its requests of type `GET`.
+    The `meta` represents an additional description of it.
   """
   defmacro get(resource, meta), do: compile :get, {resource, meta}
 
   @doc """
-    POST method definition
-    It creates the action function, named `resource_name/2` that will
-    eventually call HTTPoison.post function
+    It creates `resource_name/2` function, that will provide a structured
+    representation of a resource and will make  its requests of type `POST`.
+    The `meta` represents an additional description of it.
   """
   defmacro post(resource, meta), do: compile :post, {resource, meta}
 
@@ -38,32 +48,24 @@ defmodule KL.Resource do
       raise "cannot define a resource without an url"
     end
 
-    {resource_handler, _} = Code.eval_quoted(meta[:handler])
-    resource_headers = meta[:headers] || %{}
-    resource_model = meta[:model]
-
     if meta[:segment] do
       quote do
         def unquote(:"#{resource}")(segment, params \\ %{}) do
-          headers = Map.merge(unquote(Macro.escape resource_headers), headers)
-          handler = unquote(resource_handler)
-          action = String.to_atom(unquote(resource))
-          model = unquote(resource_model)
-          HttpClient.get(unquote(meta[:url]) <> segment, params, headers)
-          |> Handler.Model.transform(model)
-          |> Handler.Action.delegate(action, handler)
+          meta = unquote(meta)
+          handler = Code.eval_quoted(meta[:handler])
+          HttpClient.get("#{meta[:url]}#{meta[:segment]}", params, _headers())
+          |> Model.transform(meta[:model])
+          |> Action.delegate(:"#{unquote resource}", handler)
         end
       end
     else
       quote do
         def unquote(:"#{resource}")(params \\ %{}) do
-          headers = Map.merge(unquote(Macro.escape resource_headers), headers)
-          handler = unquote(resource_handler)
-          action = String.to_atom(unquote(resource))
-          model = unquote(resource_model)
-          HttpClient.get(unquote(meta[:url]), params, headers)
-          |> Handler.Model.transform(model)
-          |> Handler.Action.delegate(action, handler)
+          meta = unquote(meta)
+          handler = Code.eval_quoted(meta[:handler])
+          HttpClient.get(meta[:url], params, _headers())
+          |> Model.transform(meta[:model])
+          |> Action.delegate(:"#{unquote resource}", handler)
         end
       end
     end
@@ -80,8 +82,6 @@ defmodule KL.Resource do
 
   @doc false
   defp compile(:headers, headers) do
-    quote do
-      defp headers, do: unquote(headers)
-    end
+    quote do: def headers, do: unquote(headers)
   end
 end
