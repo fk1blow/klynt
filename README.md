@@ -23,6 +23,8 @@ The metadata defines some key attributes:
   * `handler` passes the response handler's(module) `handle/2` function
   * `segment` additional string segments appended to the url of the resource
 
+_See more examples inside the test module!_
+
 ## get/2
 The `get/2` macro accepts a resource name and "metadata". The resource name
 string becomes the name of the function which will be automatically defined
