@@ -2,7 +2,12 @@ defmodule KLTest do
   use ExUnit.Case, async: true
   doctest KL
 
-  defmodule SimpleResource do
+  #
+  # GET
+  # resources that will fetch their representation using an HTTP GET
+  #
+
+  defmodule GetResource do
     use KL.Resource
 
     headers do
@@ -26,32 +31,54 @@ defmodule KLTest do
                     handler: ExampleHandler
   end
 
-  test "generates a simple function with optional params" do
-    assert SimpleResource.simple_action
+  test "get a simple resource" do
+    assert GetResource.simple_action
   end
 
   test "simple resource" do
-    res = SimpleResource.simple_action
+    res = GetResource.simple_action
     assert res == %KL.Model.Content{data: res.data}
   end
 
   test "resource that uses a specific model" do
-    res = SimpleResource.with_model
+    res = GetResource.with_model
     assert res == %AccountInfoModel{email: res.email, display_name: res.display_name}
   end
 
   test "resource that uses a specific model but has invalid response" do
-    res = SimpleResource.with_model_and_error
+    res = GetResource.with_model_and_error
     assert res == %KL.Model.Error{error: res.error}
   end
 
   test "resource that has handler" do
-    res = SimpleResource.with_handler
+    res = GetResource.with_handler
     assert res == "content handled"
   end
 
   test "resource with handler and model" do
-    res = SimpleResource.with_handler_and_model
+    res = GetResource.with_handler_and_model
     assert res == %{:name => res[:name], :email => res[:email]}
+  end
+
+  #
+  # POST
+  # resources that will fetch their representation using an HTTP POST
+  #
+
+  defmodule PostResource do
+    use KL.Resource
+
+    headers do
+      access_token = Application.get_env(:klynt, :access_token)
+      %{"Authorization" => "Bearer #{access_token}"}
+    end
+
+    get "shares", url: "https://api.dropboxapi.com/1/shares/auto",
+              segment: "path"
+  end
+
+  test "post a simple resource" do
+    res = PostResource.share_link "/etc", %{"short_url" => "true"}
+    IO.inspect res
   end
 end

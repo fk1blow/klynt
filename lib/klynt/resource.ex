@@ -12,7 +12,7 @@ defmodule KL.Resource do
         if :erlang.function_exported(__MODULE__, :headers, 0) do
           case apply(__MODULE__, :headers, []) do
             headers when is_map headers -> headers
-            _                           -> %{}
+            true -> %{}
           end
         else
           %{}
@@ -53,7 +53,7 @@ defmodule KL.Resource do
         def unquote(:"#{resource}")(segment, params \\ %{}) do
           meta = unquote(meta)
           handler = Code.eval_quoted(meta[:handler])
-          HttpClient.get("#{meta[:url]}#{meta[:segment]}", params, _headers())
+          HttpClient.get("#{meta[:url]}#{segment}", params, _headers())
           |> Model.transform(meta[:model])
           |> Action.delegate(:"#{unquote resource}", handler)
         end
@@ -77,7 +77,27 @@ defmodule KL.Resource do
       raise "cannot define a resource without an url"
     end
 
-    IO.puts "should define the post requests"
+    if meta[:segment] do
+      quote do
+        def unquote(:"#{resource}")(segment, params \\ %{}) do
+          meta = unquote(meta)
+          handler = Code.eval_quoted(meta[:handler])
+          HttpClient.post("#{meta[:url]}#{segment}", params, _headers())
+          # |> Model.transform(meta[:model])
+          # |> Action.delegate(:"#{unquote resource}", handler)
+        end
+      end
+    else
+      quote do
+        def unquote(:"#{resource}")(params \\ %{}) do
+          meta = unquote(meta)
+          handler = Code.eval_quoted(meta[:handler])
+          HttpClient.post(meta[:url], params, _headers())
+          # |> Model.transform(meta[:model])
+          # |> Action.delegate(:"#{unquote resource}", handler)
+        end
+      end
+    end
   end
 
   @doc false

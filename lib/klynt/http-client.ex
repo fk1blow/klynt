@@ -6,9 +6,15 @@ defmodule KL.HttpClient do
     |> transform_response
   end
 
+  def post(url, params, headers) do
+    IO.puts url
+    IO.inspect params
+    IO.inspect headers
+    # raise "not implemented"
+  end
+
   @doc """
     handle responses from httpoison call
-    TODO: make shure you cover every response type dropbox may return
   """
 
   defp handle_response({:ok, %HTTPoison.Response{status_code: 200, body: body, headers: headers}}) do
