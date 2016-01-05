@@ -73,12 +73,11 @@ defmodule KLTest do
       %{"Authorization" => "Bearer #{access_token}"}
     end
 
-    get "shares", url: "https://api.dropboxapi.com/1/shares/auto",
-              segment: "path"
+    post "shares", url: "https://api.dropboxapi.com/1/shares/auto"
   end
 
   test "post a simple resource" do
-    res = PostResource.share_link "/etc", %{"short_url" => "true"}
-    IO.inspect res
+    res = PostResource.shares({:form, [path: "/etc"]}, %{"short_url" => "true"})
+    assert res == %KL.Model.Content{data: res.data}
   end
 end
