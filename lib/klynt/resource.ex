@@ -2,6 +2,7 @@ defmodule KL.Resource do
   alias KL.HttpClient
   alias KL.Handler.Action
   alias KL.Handler.Model
+  alias KL.UndefinedUrl
 
   defmacro __using__(_) do
     quote do
@@ -44,9 +45,7 @@ defmodule KL.Resource do
 
   @doc false
   defp compile(:get, {resource, meta}) do
-    unless meta[:url] do
-      raise "cannot define a resource without an url"
-    end
+    unless meta[:url], do: raise UndefinedUrl
 
     if meta[:segment] do
       quote do
@@ -73,29 +72,15 @@ defmodule KL.Resource do
 
   @doc false
   defp compile(:post, {resource, meta}) do
-    unless meta[:url] do
-      raise "cannot define a resource without an url"
-    end
+    unless meta[:url], do: raise UndefinedUrl
 
-    if meta[:segment] do
-      quote do
-        def unquote(:"#{resource}")(segment, params \\ %{}) do
-          meta = unquote(meta)
-          handler = Code.eval_quoted(meta[:handler])
-          HttpClient.post("#{meta[:url]}#{segment}", params, _headers())
-          # |> Model.transform(meta[:model])
-          # |> Action.delegate(:"#{unquote resource}", handler)
-        end
-      end
-    else
-      quote do
-        def unquote(:"#{resource}")(params \\ %{}) do
-          meta = unquote(meta)
-          handler = Code.eval_quoted(meta[:handler])
-          HttpClient.post(meta[:url], params, _headers())
-          # |> Model.transform(meta[:model])
-          # |> Action.delegate(:"#{unquote resource}", handler)
-        end
+    quote do
+      def unquote(:"#{resource}")(body, headers \\ %{}) do
+        meta = unquote(meta)
+        handler = Code.eval_quoted(meta[:handler])
+        HttpClient.post("#{meta[:url]}", body, _headers())
+        |> Model.transform(meta[:model])
+        |> Action.delegate(:"#{unquote resource}", handler)
       end
     end
   end

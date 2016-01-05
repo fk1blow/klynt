@@ -6,11 +6,11 @@ defmodule KL.HttpClient do
     |> transform_response
   end
 
-  def post(url, params, headers) do
-    IO.puts url
-    IO.inspect params
-    IO.inspect headers
-    # raise "not implemented"
+  def post(url, body, headers) do
+    special_headers = %{"Content-type" => "application/x-www-form-urlencoded"}
+    HTTPoison.post(url, body, Map.merge(headers, special_headers))
+    |> handle_response
+    |> transform_response
   end
 
   @doc """
