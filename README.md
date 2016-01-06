@@ -59,8 +59,4 @@ Add klynt to your list of dependencies in mix.exs:
 update dependencies:
 
     mix deps.get
-    
-## todo
-  * remove dropbox api as a stub(kinda urgent)
-  * add type specs in order to describe the dsl
-  * define the arity and type specs of the `get` macro
+
