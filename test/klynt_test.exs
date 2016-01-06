@@ -1,7 +1,13 @@
 defmodule KLTest do
   use ExUnit.Case, async: true
+  use ExVCR.Mock, adapter: ExVCR.Adapter.Hackney
   import PathHelpers
+
   doctest KL
+
+  setup_all do
+    HTTPoison.start
+  end
 
   #
   # GET
@@ -33,32 +39,44 @@ defmodule KLTest do
   end
 
   test "get a simple resource" do
-    assert GetResource.simple_action
+    use_cassette "httpoison_get" do
+      assert GetResource.simple_action
+    end
   end
 
   test "simple resource" do
-    res = GetResource.simple_action
-    assert res == %KL.Model.Content{data: res.data}
+    use_cassette "httpoison_get" do
+      res = GetResource.simple_action
+      assert res == %KL.Model.Content{data: res.data}
+    end
   end
 
   test "resource that uses a specific model" do
-    res = GetResource.with_model
-    assert res == %AccountInfoModel{email: res.email, display_name: res.display_name}
+    use_cassette "resource_with_model" do
+      res = GetResource.with_model
+      assert res == %AccountInfoModel{email: res.email, display_name: res.display_name}
+    end
   end
 
   test "resource that uses a specific model but has invalid response" do
-    res = GetResource.with_model_and_error
-    assert res == %KL.Model.Error{error: res.error}
+    use_cassette "resource_with_error_model" do
+      res = GetResource.with_model_and_error
+      assert res == %KL.Model.Error{error: res.error}
+    end
   end
 
   test "resource that has handler" do
-    res = GetResource.with_handler
-    assert res == "content handled"
+    use_cassette "resource_with_handler" do
+      res = GetResource.with_handler
+      assert res == "content handled"
+    end
   end
 
   test "resource with handler and model" do
-    res = GetResource.with_handler_and_model
-    assert res == %{:name => res[:name], :email => res[:email]}
+    use_cassette "resource_with_handler_and_model" do
+      res = GetResource.with_handler_and_model
+      assert res == %{:name => res[:name], :email => res[:email]}
+    end
   end
 
   #
@@ -78,8 +96,10 @@ defmodule KLTest do
   end
 
   test "post a simple resource" do
-    res = PostResource.shares({:form, [path: "/etc"]}, %{"short_url" => "true"})
-    assert res == %KL.Model.Content{data: res.data}
+    use_cassette "resource_post_tuple" do
+      res = PostResource.shares({:form, [path: "/etc"]}, %{"short_url" => "true"})
+      assert res == %KL.Model.Content{data: res.data}
+    end
   end
 
   #
@@ -99,8 +119,10 @@ defmodule KLTest do
   end
 
   test "put a file" do
-    {:ok, file} = File.read(fixture_path("logo.png"))
-    res = PutResource.put_file(file, %{"path" => "/tmp/image.png"})
-    assert res == %KL.Model.Content{data: res.data}
+    use_cassette "resource_put_file_upload" do
+      {:ok, file} = File.read(fixture_path("logo.png"))
+      res = PutResource.put_file(file, %{"path" => "/tmp/image.png"})
+      assert res == %KL.Model.Content{data: res.data}
+    end
   end
 end
