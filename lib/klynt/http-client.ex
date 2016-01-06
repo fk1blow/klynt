@@ -6,7 +6,8 @@ defmodule KL.HttpClient do
     |> transform_response
   end
 
-  def post(url, body, headers) do
+  def post(url, params, body, headers) do
+    url = "#{url}#{params_to_string(params)}"
     special_headers = %{"Content-type" => "application/x-www-form-urlencoded"}
     HTTPoison.post(url, body, Map.merge(headers, special_headers))
     |> handle_response

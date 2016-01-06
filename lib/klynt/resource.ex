@@ -75,10 +75,10 @@ defmodule KL.Resource do
     unless meta[:url], do: raise UndefinedUrl
 
     quote do
-      def unquote(:"#{resource}")(body, headers \\ %{}) do
+      def unquote(:"#{resource}")(body, params \\ %{}) do
         meta = unquote(meta)
         handler = Code.eval_quoted(meta[:handler])
-        HttpClient.post("#{meta[:url]}", body, _headers())
+        HttpClient.post("#{meta[:url]}", params, body, _headers())
         |> Model.transform(meta[:model])
         |> Action.delegate(:"#{unquote resource}", handler)
       end
