@@ -10,10 +10,6 @@ which can be fetched using http(GET, POST or other http methods).
 Besides the simple fetch, a resource can be manipulated/handled by
 a custom module or transformed into a model(elixir struct).
 
-**Currently, the only working macro is `get`, which will define a function
-named `resource_name/1` or, if the `segment` meta is present,
-`resource_name/2`,**
-
 ## API
 The api is very simple - a resource has a name(which will be transformed
 into a function) and "metadata".
@@ -21,7 +17,6 @@ The metadata defines some key attributes:
   * `url` which is the endpoint of the resource
   * `model` transform the raw response into the provided struct
   * `handler` passes the response handler's(module) `handle/2` function
-  * `segment` additional string segments appended to the url of the resource
 
 _See more examples inside the test module!_
 
@@ -32,20 +27,10 @@ and available to the module that uses `KL.Resource`. The metadata is a
 keyword list that describes the resource.
 
 ##### example
-without an url segment:
 
     get 'account_info', url: "api.dropboxapi.com/1/account/info"
     
-will define a function named `account_info/1` which takes a map(default %{}).
-The url of the resource is the same as in the meta[:url]...
-
-with an url segment:
-
-    get 'account_info', url: "api.dropboxapi.com/1/account/info"
-                    segment: ["path"]
-
-will define a `account_info/2`, which takes a string and a map. The final
-url of the resource will become `api.dropbox.com/1/account/info/<segment>`
+will define a function named `account_info/1` which takes a map as `params`.
 
 ### post/2
 The `post/2` macro accepts a resource name and "metadata". The resource name
@@ -59,6 +44,9 @@ keyword list that describes the resource.
     
 will define a function named `shares/2` which takes a keyword list as a `body`
 and map for the `headers`.
+
+### put/2
+same as `post/2` the only difference beting the http method which is `PUT`
 
 ## installation
 
