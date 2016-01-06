@@ -29,7 +29,8 @@ defmodule KL.Mixfile do
   defp deps do
     [
       {:httpoison, "~> 0.8.0"},
-      {:poison, "~> 1.5"}
+      {:poison, "~> 1.5"},
+      {:exvcr, "~> 0.7", only: :test}
     ]
   end
 end
