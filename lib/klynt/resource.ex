@@ -43,29 +43,24 @@ defmodule KL.Resource do
   """
   defmacro post(resource, meta), do: compile :post, {resource, meta}
 
+  @doc """
+    It creates `resource_name/2` function, that will provide a structured
+    representation of a resource and will make  its requests of type `PUT`.
+    The `meta` represents an additional description of it.
+  """
+  defmacro put(resource, meta), do: compile :put, {resource, meta}
+
   @doc false
   defp compile(:get, {resource, meta}) do
     unless meta[:url], do: raise UndefinedUrl
 
-    if meta[:segment] do
-      quote do
-        def unquote(:"#{resource}")(segment, params \\ %{}) do
-          meta = unquote(meta)
-          handler = Code.eval_quoted(meta[:handler])
-          HttpClient.get("#{meta[:url]}#{segment}", params, _headers())
-          |> Model.transform(meta[:model])
-          |> Action.delegate(:"#{unquote resource}", handler)
-        end
-      end
-    else
-      quote do
-        def unquote(:"#{resource}")(params \\ %{}) do
-          meta = unquote(meta)
-          handler = Code.eval_quoted(meta[:handler])
-          HttpClient.get(meta[:url], params, _headers())
-          |> Model.transform(meta[:model])
-          |> Action.delegate(:"#{unquote resource}", handler)
-        end
+    quote do
+      def unquote(:"#{resource}")(params \\ %{}) do
+        meta = unquote(meta)
+        handler = Code.eval_quoted(meta[:handler])
+        HttpClient.get(meta[:url], params, _headers())
+        |> Model.transform(meta[:model])
+        |> Action.delegate(:"#{unquote resource}", handler)
       end
     end
   end
@@ -78,7 +73,21 @@ defmodule KL.Resource do
       def unquote(:"#{resource}")(body, params \\ %{}) do
         meta = unquote(meta)
         handler = Code.eval_quoted(meta[:handler])
-        HttpClient.post("#{meta[:url]}", params, body, _headers())
+        HttpClient.post(meta[:url], params, body, _headers())
+        |> Model.transform(meta[:model])
+        |> Action.delegate(:"#{unquote resource}", handler)
+      end
+    end
+  end
+
+  defp compile(:put, {resource, meta}) do
+    unless meta[:url], do: raise UndefinedUrl
+
+    quote do
+      def unquote(:"#{resource}")(body, params \\ %{}) do
+        meta = unquote(meta)
+        handler = Code.eval_quoted(meta[:handler])
+        HttpClient.put(meta[:url], params, body, _headers())
         |> Model.transform(meta[:model])
         |> Action.delegate(:"#{unquote resource}", handler)
       end

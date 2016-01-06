@@ -1,5 +1,6 @@
 defmodule KLTest do
   use ExUnit.Case, async: true
+  import PathHelpers
   doctest KL
 
   #
@@ -78,6 +79,28 @@ defmodule KLTest do
 
   test "post a simple resource" do
     res = PostResource.shares({:form, [path: "/etc"]}, %{"short_url" => "true"})
+    assert res == %KL.Model.Content{data: res.data}
+  end
+
+  #
+  # PUT
+  # resources that will fetch their representation using an HTTP PUT
+  #
+
+  defmodule PutResource do
+    use KL.Resource
+
+    headers do
+      access_token = Application.get_env(:klynt, :access_token)
+      %{"Authorization" => "Bearer #{access_token}"}
+    end
+
+    put "put_file", url: "https://content.dropboxapi.com/1/files_put/auto"
+  end
+
+  test "put a file" do
+    {:ok, file} = File.read(fixture_path("logo.png"))
+    res = PutResource.put_file(file, %{"path" => "/tmp/image.png"})
     assert res == %KL.Model.Content{data: res.data}
   end
 end
