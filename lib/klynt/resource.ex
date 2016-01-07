@@ -2,7 +2,8 @@ defmodule KL.Resource do
   alias KL.HttpClient
   alias KL.Handler.Action
   alias KL.Handler.Model
-  alias KL.UndefinedUrl
+  alias KL.UndefinedResourceUrl
+  alias KL.InvalidResourceName
 
   defmacro __using__(_) do
     quote do
@@ -52,7 +53,8 @@ defmodule KL.Resource do
 
   @doc false
   defp compile(:get, {resource, meta}) do
-    unless meta[:url], do: raise UndefinedUrl
+    unless meta[:url], do: raise UndefinedResourceUrl
+    if byte_size(resource) < 3, do: raise InvalidResourceName
 
     quote do
       def unquote(:"#{resource}")(params \\ %{}) do
@@ -67,7 +69,8 @@ defmodule KL.Resource do
 
   @doc false
   defp compile(:post, {resource, meta}) do
-    unless meta[:url], do: raise UndefinedUrl
+    unless meta[:url], do: raise UndefinedResourceUrl
+    if byte_size(resource) < 3, do: raise InvalidResourceName
 
     quote do
       def unquote(:"#{resource}")(body, params \\ %{}) do
@@ -81,7 +84,8 @@ defmodule KL.Resource do
   end
 
   defp compile(:put, {resource, meta}) do
-    unless meta[:url], do: raise UndefinedUrl
+    unless meta[:url], do: raise UndefinedResourceUrl
+    if byte_size(resource) < 3, do: raise InvalidResourceName
 
     quote do
       def unquote(:"#{resource}")(body, params \\ %{}) do
